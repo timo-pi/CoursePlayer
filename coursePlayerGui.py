@@ -11,7 +11,7 @@ import shutil
 
 #**************************************************+++
 # Command to build exe:
-# pyinstaller --add-data "info.html;." --onefile --clean -y coursePlayerGui.py
+# pyinstaller --add-data "info.htm;." --onefile --clean -y coursePlayerGui.py
 #*****************************************************
 
 # Variables
@@ -36,22 +36,22 @@ def searchStartFile(path):
             return 'start_lm.html'
         elif file == 'index.html':
             return 'index.html'
-    # copy info html to current path
-    """ Get absolute path to resource, works for dev and for PyInstaller """
+    # check if app runs from exe or dev-env.
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
-    info_path = os.path.join(base_path, 'info.html')
+    # copy file to extracted directory
+    info_path = os.path.join(base_path, 'info.htm')
     os.chdir(extracted_scorm_path)
-    shutil.copyfile(info_path, './info.html')
+    shutil.copyfile(info_path, './info.htm')
     time.sleep(2)
-    return 'info.html'
+    return 'info.htm'
 
 # Extract SCORM file
 def extractScorm(filename):
-    btn_select.config(state="disabled")
+    # btn_select.config(state="disabled")
     with zipfile.ZipFile(filename, 'r') as zip_ref:
         global extracted_scorm_path
         extracted_scorm_path = filename[:-4]
@@ -90,11 +90,8 @@ def buttonPressed():
 root = tk.Tk()
 root.geometry('340x230')
 root.title('SIT | Course Player')
-# logo_img = tk.PhotoImage(file='./images/schwarz-logo.gif')
 btn_select = tk.Button(root, text="Select SCORM zip file", command=buttonPressed)
 # btn_quit = tk.Button(root, text="Quit", command=close_window)
-# logo_label = tk.Label(root, image=logo_img)
-# logo_label.place(x=0, y=0)
 btn_select.place(x=100, y=75, width=140, height=30)
 # btn_quit.place(x=125, y=125, width=140, height=30)
 root.mainloop()

@@ -1,14 +1,26 @@
-import asyncio
-import time
+from multiprocessing import Process
+import os, time
+import psutil
 
-async def say_after(delay, what):
-    await asyncio.sleep(delay)
-    print(what)
+state = 1
 
-async def main():
+def info(title):
+    print(title)
+    print('module name:', __name__)
+    print('parent process:', os.getppid())
+    print('process id:', os.getpid())
 
-    await say_after(1, 'hello')
-    await say_after(2, 'world')
+def f(name):
 
 
-asyncio.run(main())
+    info(name)
+    time.sleep(4)
+    print("should not print out...")
+
+if __name__ == '__main__':
+    info('main line')
+    p = Process(target=f, args=('process',))
+    p.start()
+    p.join()
+    p.kill()
+
