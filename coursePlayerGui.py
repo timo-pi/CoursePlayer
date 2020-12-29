@@ -36,6 +36,8 @@ def searchStartFile(path):
             return 'start_lm.html'
         elif file == 'index.html':
             return 'index.html'
+        elif file == 'index_scorm.html':
+            return 'index_scorm.html'
     # check if app runs from exe or dev-env.
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
