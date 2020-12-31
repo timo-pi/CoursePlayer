@@ -15,6 +15,7 @@ import shutil
 #*****************************************************
 
 # Variables
+
 extracted_scorm_path = ''
 # httpd = http.server.HTTPServer
 startCwd = os.getcwd()
@@ -38,6 +39,10 @@ def searchStartFile(path):
             return 'index.html'
         elif file == 'index_scorm.html':
             return 'index_scorm.html'
+        elif file == 'start_am.html':
+            return 'start_am.html'
+        elif file == 'start_am_scorm.html':
+            return 'start_am_scorm.html'
     # check if app runs from exe or dev-env.
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
@@ -97,3 +102,9 @@ btn_select = tk.Button(root, text="Select SCORM zip file", command=buttonPressed
 btn_select.place(x=100, y=75, width=140, height=30)
 # btn_quit.place(x=125, y=125, width=140, height=30)
 root.mainloop()
+
+# TODO: Try/ Catch Block for Webserver Thread, change Webserver root to c:, adjust path accordingly, recognize restart with running webserver
+# TODO: Add "Delete unpacked files" button and "Close" button
+# TODO: Add Label with loaded path/ SCORM package
+
+
