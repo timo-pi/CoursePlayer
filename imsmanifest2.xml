@@ -8,7 +8,6 @@
   xsi:schemaLocation="http://www.imsglobal.org/xsd/imscp_v1p1 imscp_v1p1.xsd
                       http://www.adlnet.org/xsd/adlcp_v1p3 adlcp_v1p3.xsd
                       http://www.adlnet.org/xsd/adlseq_v1p3 adlseq_v1p3.xsd
-                      http://www.adlnet.org/xsd/adlnav_v1p3 adlnav_v1p3.xsd
                       http://www.imsglobal.org/xsd/imsss imsss_v1p0.xsd">
   <metadata>
     <schema>ADL SCORM</schema>

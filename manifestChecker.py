@@ -5,13 +5,10 @@ import re
 
 # Read xml file
 url = "./imsmanifest.xml"
-#domtree = xml.dom.minidom.parseString(result)
 domtree = xml.dom.minidom.parse(url)
 rootnode = domtree.documentElement
 
-# 1. Check for special characters
-xml_string = open(url)
-print("1. Valid! - no special characters found" if re.match("""^[a-zA-Z0-9_=.":/<>?_\-\s]*$""", xml_string.read()) else "1. Invalid!!! - special characters found!")
+
 
 # 2. Find SCORM Version
 scorm_schema = str(rootnode.getElementsByTagName('schemaversion')[0].firstChild.data)
@@ -30,29 +27,15 @@ else:
 # 6. Check adlnav elements in item
 adlnav_item = rootnode.getElementsByTagName('adlnav:navigationInterface')
 if adlnav_item == []:
-    print("4. adlnav tags missing in item tag!")
+    print("4. adlnav presentation is missing in item tag!")
 else:
-    print("4. adlnav is present in item: " + str(adlnav_item))
+    print("4. adlnav presentation is present in item: " + str(adlnav_item))
 
 # 7. Add adlnav in manifest attribute
 #TODO
 
 # 8. Add adlnav elements in item
-adlnav_presentation = """
-          <adlnav:navigationInterface>
-            <adlnav:hideLMSUI>continue</adlnav:hideLMSUI>
-            <adlnav:hideLMSUI>previous</adlnav:hideLMSUI>
-            <adlnav:hideLMSUI>exit</adlnav:hideLMSUI>
-            <adlnav:hideLMSUI>exitAll</adlnav:hideLMSUI>
-            <adlnav:hideLMSUI>suspendAll</adlnav:hideLMSUI>
-            <adlnav:hideLMSUI>abandonAll</adlnav:hideLMSUI>
-          </adlnav:navigationInterface>
-"""
-new_tag = domtree.createElement(adlnav_presentation)
-item = rootnode.getElementsByTagName('item')
-item.appendChild(new_tag)
-#title = item[0].childNodes
-print(item)
+
 
 
 # 9. Write new imsmanifest.xml
