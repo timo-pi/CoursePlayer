@@ -4,18 +4,18 @@ import tkinter as tk
 from tkinter import filedialog
 from xmlHelper import xmlHelper as xhelp
 from scormExtractor import ScormExtractor as se
-
-unzip_path = ""
+import scormZipper as sz
 
 def saveImsmanifest(rootnode, path):
     with open(path, 'w') as f:
         f.write(rootnode.toxml())
         # f.write(adln_presentation.toprettyxml())
         f.close()
+    se.zipScorm(path)
 
-def runChecks(imsmanifest):
+def runChecks(path):
     # open xml document
-    domtree = minidom.parse(imsmanifest)
+    domtree = minidom.parse(path + "/imsmanifest.xml")
     rootnode = domtree.documentElement
     new_imsmanifest = False
 
@@ -66,15 +66,23 @@ def runChecks(imsmanifest):
         print("Exception checking adlnav attribute in manifest element")
 
     # check for adlnav presentation in item element
+    print(xhelp.checkAdlnavPresentation(rootnode))
     if xhelp.checkAdlnavPresentation(rootnode):
         pass
     else:
-        domtree = xhelp.adlnavHideElements(domtree)
+        xhelp.adlnavHideElements(domtree)
         new_imsmanifest = True
 
-    # adlnav GUI + file update
+    # adlnav GUI + imsmanifest-update
     if new_imsmanifest:
-        saveImsmanifest(rootnode, unzip_path)
+        # save manifest.xml
+        saveImsmanifest(rootnode, path + "/imsmanifest.xml")
+
+        # zip scorm package
+        os.chdir(path)
+        file_paths = sz.retrieve_file_paths('./')
+        sz.zipScorm(file_paths, 'TESTZIP.zip')
+
         label_namespace = tk.Label(root, textvariable=text_namespace, anchor="w", background='#ffd275')
         label_namespace.place(x=20, y=50, width=360, height=30)
         text_namespace.set("New imsmanifest.xml has been created!")
@@ -93,22 +101,13 @@ def runChecks(imsmanifest):
         label_characters.place(x=20, y=110, width=360, height=30)
         text_characters.set("Failed: Special Characters in file names!")
 
-    # check if adlnav presentation is present an create it if not
-    print(xhelp.checkAdlnavPresentation(rootnode))
-    if xhelp.checkAdlnavPresentation(rootnode):
-        print('adlnav presentation is already present!')
-        pass
-    else:
-        xhelp.adlnavHideElements(domtree)
-        print('adlnav presentation was created!')
+
 
 def selectFiles():
     root.filenames = filedialog.askopenfilenames(initialdir="/", title="Select file", filetypes=(("all files", "*.*"), ("all files", "*.*")))
     print(root.filenames)
     if len(root.filenames) == 1:
-        global unzip_path
-        unzip_path = se.extractScorm(root.filenames[0])
-        runChecks(unzip_path)
+        runChecks(se.extractScorm(root.filenames[0]))
     # NOT WORKING YET: MULTIPLE FILES SELECTED
     elif len(root.filenames) > 1:
         for i in root.filenames:
