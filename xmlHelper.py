@@ -1,5 +1,7 @@
 from xml.dom import minidom
 import os, re
+import xlsxwriter
+import writeExcel as we
 
 class xmlHelper:
 
@@ -28,8 +30,9 @@ class xmlHelper:
         return True if len(rootnode.getElementsByTagName('item')) == 1 else False
 
     # check filenames for special characters
-    def checkSpecialCharsInFileNames(rootnode):
+    def checkSpecialCharsInFileNames(rootnode, path):
         files_handler = rootnode.getElementsByTagName('file')
+        report_data = []
         isValid = True
         for t in files_handler:
             if t.hasAttribute('href'):
@@ -39,6 +42,10 @@ class xmlHelper:
                 else:
                     isValid = False
                     print("Invalid Special Character in " + str(t.getAttribute('href')))
+                    report_data.append('<file href="' + str(t.getAttribute('href')) + '" />')
+
+        if len(report_data) > 0:
+            we.createItemsReport(path, report_data)
         return isValid
 
     # check if adlnav presentation element is already present
@@ -87,3 +94,11 @@ class xmlHelper:
     def checkScormVersion(rootnode):
         schema_node = rootnode.getElementsByTagName('schemaversion')[0].firstChild.data
         return schema_node
+
+    def createExcelReport(path, data):
+        workbook = xlsxwriter.Workbook('hello.xlsx')
+        worksheet = workbook.add_worksheet()
+
+        worksheet.write('A1', 'Hello world')
+
+        workbook.close()

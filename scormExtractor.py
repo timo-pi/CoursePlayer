@@ -13,7 +13,7 @@ class ScormExtractor:
             return extracted_scorm_path
 
     def zipScorm(file_path):
-        with zipfile.ZipFile("Test-Zip.zip", 'w') as zipObj:
+        with zipfile.ZipFile("Test-Zip-File", 'w') as zipObj:
             # Iterate over all the files in directory
             for folderName, subfolders, filenames in os.walk(file_path):
                 for filename in filenames:
