@@ -1,7 +1,7 @@
-from xml.dom import minidom
 import os, re
 import xlsxwriter
 import writeExcel as we
+from pathlib import Path
 
 class xmlHelper:
 
@@ -31,28 +31,42 @@ class xmlHelper:
 
     # check filenames for special characters
     def checkSpecialCharsInFileNames(rootnode, path):
-        files_handler = rootnode.getElementsByTagName('file')
+        parent_path = Path(path).parent
+        report_path = os.path.join(parent_path.parent, os.path.basename(os.path.dirname(path + "/imsmanifest.xml")))
+
+        file_strings = rootnode.getElementsByTagName('file')
+        title_strings = rootnode.getElementsByTagName('title')
         report_data = []
         isValid = True
-        for t in files_handler:
-            if t.hasAttribute('href'):
-                # print(t.getAttribute('href'))
-                if re.match("""^[a-zA-Z0-9_./\-]*$""", t.getAttribute('href')):
+        for fs in file_strings:
+            if fs.hasAttribute('href'):
+                if re.match("""^[a-zA-Z0-9_./\-]*$""", fs.getAttribute('href')):
                     pass
                 else:
                     isValid = False
-                    print("Invalid Special Character in " + str(t.getAttribute('href')))
-                    report_data.append('<file href="' + str(t.getAttribute('href')) + '" />')
+                    print("Invalid Special Character in " + str(fs.getAttribute('href')))
+                    report_data.append('<file href="' + str(fs.getAttribute('href')) + '" />')
+
+        for ts in title_strings:
+            try:
+                if re.match("""^[a-zA-Z0-9_./\-]*$""", ts.firstChild.nodeValue):
+                    pass
+                else:
+                    isValid = False
+                    report_data.append('<title>' + ts.firstChild.nodeValue + '</title>')
+                    print("SPECIAL CHARS DETECTED: " + str(ts.firstChild.nodeValue))
+            except:
+                print("Exception during special characters Check.")
 
         if len(report_data) > 0:
-            we.createItemsReport(path, report_data)
+            we.createItemsReport(report_path, report_data)
+
         return isValid
 
     # check if adlnav presentation element is already present
     def checkAdlnavPresentation(rootnode):
         try:
             adlnav_pres_handler = rootnode.getElementsByTagName('adlnav:hideLMSUI')
-            #print(len(adlnav_pres_handler))
             if len(adlnav_pres_handler) < 1:
                 return False
             else:

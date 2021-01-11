@@ -1,5 +1,7 @@
 import os
 import zipfile
+from pathlib import Path
+import shutil
 
 # Declare the function to return all file paths of the particular directory
 def retrieve_file_paths(dirName):
@@ -16,12 +18,8 @@ def retrieve_file_paths(dirName):
     # return all paths
     return filePaths
 
-# Declare the main function
-def zipScorm(filePaths, zip_filename):
-
-    # printing the list of all files to be zipped
-    print('New SCORM-Package created: ' + str(zip_filename))
-
+"""def zipScorm(filePaths, zip_filename):
+    print("zip_filename: " + str(zip_filename))
     # writing files to a zipfile
     zip_file = zipfile.ZipFile(zip_filename, 'w')
     with zip_file:
@@ -29,18 +27,42 @@ def zipScorm(filePaths, zip_filename):
         for file in filePaths:
             zip_file.write(file)
     print(zip_filename + ' file is created successfully!')
-    zip_file.close()
+    zip_file.close()"""
 
-def deleteUnpackedScorm(dirName):
+def zipDir(dir_name, out_filename):
+    print("def zipDir2: ")
+    print(Path(dir_name).parent.parent)
+    os.chdir(Path(dir_name).parent.parent)
+    shutil.make_archive(out_filename, 'zip', dir_name)
+
+def extractScorm(zip_file):
+    # btn_select.config(state="disabled")
+    with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+
+        # create /temp folder
+        filename = os.path.basename(zip_file)
+        dirname = os.path.dirname(zip_file)
+        extract_path = os.path.join(dirname, 'temp', filename)
+        extracted_scorm_path = extract_path[:-4]
+
+        zip_ref.extractall(extracted_scorm_path)
+        print("extracted_scorm_path: " + extracted_scorm_path + "/imsmanifest.xml")
+        return extracted_scorm_path
+
+"""def deleteUnpackedScorm(dirName):
     # NOT WORKING YET
     for root, directories, files in os.walk(dirName):
         for filename in files:
             # Create the full filepath by using os module.
             filePath = os.path.join(root, filename)
-            os.remove(filePath)
+            os.remove(filePath)"""
 
 
-
+"""def createZipPath():
+    filename = os.path.basename(zip_file)
+    dirname = os.path.dirname(zip_file)
+    extract_path = os.path.join(dirname, 'temp', filename)
+    extracted_scorm_path = extract_path[:-4]"""
 
 
 

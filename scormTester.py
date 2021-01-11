@@ -3,19 +3,20 @@ import re, os
 import tkinter as tk
 from tkinter import filedialog
 from xmlHelper import xmlHelper as xhelp
-from scormExtractor import ScormExtractor as se
 import scormZipper as sz
 import writeExcel as we
+from pathlib import Path
 
 multi_files_select = False
 report_path = ""
+report_saved = False
 
 def saveImsmanifest(rootnode, path):
     with open(path, 'w') as f:
         f.write(rootnode.toxml())
         # f.write(adln_presentation.toprettyxml())
         f.close()
-    se.zipScorm(path)
+    ##sz.zipScorm(path)
 
 def runChecks(path):
     report_data = [path]
@@ -89,11 +90,12 @@ def runChecks(path):
         # write to excel if multiple files selected
         if multi_files_select: report_data.append("FAILED: More than one Item element present!")
 
-    # check for adlnav namespace in manifest
+    ### check for adlnav namespace in manifest
     if SCORM_2004_4:
         global ns_problem_found
         ns_problem_found = False
         test = rootnode.getAttribute("xmlns:adlnav")
+        # add adlnav attribute to manifest
         if test == "":
             ns_problem_found = True
             print("adlnav-namespace NOT found in manifest tag!")
@@ -106,23 +108,31 @@ def runChecks(path):
         else:
             ns_problem_found = True
             xhelp.adlnavHideElements(domtree)
-        if ns_problem_found:
-            # write to excel if multiple files selected
-            if multi_files_select: report_data.append("WARNING: Namespace was missing - new SCORM package has been created!")
-
-        # save manifest.xml
-        saveImsmanifest(rootnode, path + "/imsmanifest.xml")
+        # write namespace info to excel if multiple files selected
+        if multi_files_select:
+            if ns_problem_found:
+                 report_data.append("WARNING: Namespace was missing - new SCORM package has been created!")
+            else:
+                report_data.append("Passed: Namespace present or not relevant for this SCORM version")
 
         # zip scorm package
-        os.chdir(path)
-        file_paths = sz.retrieve_file_paths('./')
-        file_name = os.path.basename(os.path.dirname(path + "/imsmanifest.xml")) + '_SF.zip'
-        new_zip_file_path = os.path.join(os.path.dirname(path), file_name)
-        sz.zipScorm(file_paths, new_zip_file_path)
+        if ns_problem_found:
+            ##file_paths = sz.retrieve_file_paths(path)
 
-        label_namespace = tk.Label(root, textvariable=text_namespace, anchor="w", background='#ffd275')
-        label_namespace.place(x=20, y=50, width=360, height=30)
-        text_namespace.set("New imsmanifest.xml has been created!")
+            #file_name = os.path.basename(os.path.dirname(path + "/imsmanifest.xml")) + '_SF.zip'
+            parent_path = Path(path).parent
+            zip_path = os.path.join(parent_path.parent, os.path.basename(os.path.dirname(path + "/imsmanifest.xml"))) + '_SF.zip'
+            #new_zip_file_path = os.path.join(os.path.dirname(path), file_name)
+            setLabelStatus("imsmanifest.xml adjusted and new SCORM package created!", '#fe5f55')
+
+            # save manifest.xml
+            saveImsmanifest(rootnode, path + "/imsmanifest.xml")
+            ##sz.zipScorm(file_paths, zip_path)
+            sz.zipDir(path, os.path.basename(path) + '_sf')
+
+            setNamespaceLabel("New imsmanifest.xml has been created!", '#ffd275')
+        else:
+            setNamespaceLabel("Passed: adlnav-Namespace present", '#c7d66d')
     else:
         label_namespace = tk.Label(root, textvariable=text_namespace, anchor="w", background='#c7d66d')
         label_namespace.place(x=20, y=50, width=360, height=30)
@@ -134,39 +144,49 @@ def runChecks(path):
     if xhelp.checkSpecialCharsInFileNames(rootnode, (os.path.dirname(path + "/imsmanifest.xml") + '_SPECIAL_CHARACTERS.xlsx')):
         label_characters = tk.Label(root, textvariable=text_characters, anchor="w", background='#c7d66d')
         label_characters.place(x=20, y=110, width=360, height=30)
-        text_characters.set("Passed: No special characters in file names.")
+        text_characters.set("Passed: No special characters in file or title elements.")
         # write to excel if multiple files selected
-        if multi_files_select: report_data.append("Passed: No special characters in file names.")
+        if multi_files_select: report_data.append("Passed: No special characters in file or title elements.")
     else:
         label_characters = tk.Label(root, textvariable=text_characters, anchor="w", background='#fe5f55')
         label_characters.place(x=20, y=110, width=360, height=30)
-        text_characters.set("Failed: Special Characters in file names!")
+        text_characters.set("Failed: Special Characters in file or title element(s)!")
+        setLabelStatus("Pls. check report/ imsmanifest.xml for special characters!", '#fe5f55')
         # write to excel if multiple files selected
-        if multi_files_select: report_data.append("Failed: Special Characters in file names!")
+        if multi_files_select: report_data.append("Failed: Special Characters in file or title element(s)!")
 
     # save Report if multiple files selected
     if multi_files_select:
         report_data.append(os.path.dirname(path + "/imsmanifest.xml") + '_SF.zip')
-        we.writeReport(report_path, report_data)
+        global report_saved
+        report_saved = we.writeReport(report_path, report_data)
+        if report_saved:
+            clearLabels()
+            setLabelStatus('Multiple files selected - pls. check SCORM-Test-Report.xlsx', '#ffd275')
+        else:
+            print("Error saving report - file may be open")
+            clearLabels()
+            setLabelStatus('Report could not be saved (maybe open?)', '#fe5f55')
 
 def selectFiles():
     root.filenames = filedialog.askopenfilenames(initialdir="/", title="Select file", filetypes=(("all files", "*.*"), ("all files", "*.*")))
     print(root.filenames)
     if len(root.filenames) == 1:
-        runChecks(se.extractScorm(root.filenames[0]))
+        runChecks(sz.extractScorm(root.filenames[0]))
     # MULTIPLE FILES SELECTED
     elif len(root.filenames) > 1:
-        global multi_files_select
+        global multi_files_select, report_path, report_saved
         multi_files_select = True
-        global report_path
         report_path = os.path.dirname(root.filenames[0])
-        we.createReport(report_path)
+        report_saved = we.createReport(report_path)
         for i in root.filenames:
-            runChecks(se.extractScorm(i))
             clearLabels()
-        text_scorm.set('Multiple files selected - pls. check SCORM-Test-Report.xlsx!')
-        label_scorm = tk.Label(root, textvariable=text_scorm, anchor="w", background='#ffd275')
-        label_scorm.place(x=20, y=20, width=360, height=30)
+            runChecks(sz.extractScorm(i))
+
+        """if report_saved:
+            setLabelStatus('Multiple files selected - pls. check SCORM-Test-Report.xlsx', '#ffd275')
+        else:
+            setLabelStatus('Report could not be saved (maybe open?)', '#ffd275')"""
 
 # GUI
 root = tk.Tk()
@@ -213,5 +233,15 @@ def clearLabels():
     label_characters.place(x=20, y=110, width=360, height=30)
     label_status = tk.Label(root, textvariable="", borderwidth=2, relief="groove", anchor="w")
     label_status.place(x=10, y=170, width=380, height=30)
+
+def setLabelStatus(text, color):
+    text_status.set(text)
+    label_status = tk.Label(root, textvariable=text_status, borderwidth=2, anchor="w", background=color)
+    label_status.place(x=20, y=175, width=360, height=20)
+
+def setNamespaceLabel(text, color):
+    text_namespace.set(text)
+    label_namespace = tk.Label(root, textvariable=text_namespace, anchor="w", background=color)
+    label_namespace.place(x=20, y=50, width=360, height=30)
 
 root.mainloop()
