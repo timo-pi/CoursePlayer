@@ -7,6 +7,11 @@ import scormZipper as sz
 import writeExcel as we
 from pathlib import Path
 
+#**************************************************+++
+# Command to build exe:
+# pyinstaller --add-data "writeExcel.py;." --add-data "xmlHelper.py;." --add-data "scormZipper.py;." --onefile --clean -y scormTester.py
+#*****************************************************
+
 multi_files_select = False
 report_path = ""
 report_saved = False
@@ -199,7 +204,7 @@ text_status.set("    Overall status:")
 
 root.geometry('400x400')
 #root.configure(background='#676767')
-root.iconbitmap('./images/schwarz.ico')
+#root.iconbitmap('./schwarz.ico')
 root.title('SIT | SCORM Tester')
 
 # Buttons
