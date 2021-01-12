@@ -155,7 +155,7 @@ def runChecks(path):
     else:
         label_characters = tk.Label(root, textvariable=text_characters, anchor="w", background='#fe5f55')
         label_characters.place(x=20, y=110, width=360, height=30)
-        text_characters.set("Failed: Special Characters in file or title element(s)!")
+        text_characters.set("Failed: special characters or .swf files detected!")
         setLabelStatus("Pls. check report/ imsmanifest.xml for special characters!", '#fe5f55')
         # write to excel if multiple files selected
         if multi_files_select: report_data.append("Failed: Special Characters in file or title element(s)!")

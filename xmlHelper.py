@@ -10,21 +10,6 @@ class xmlHelper:
         xml_string = open(url)
         print("1. Valid! - no special characters found" if re.match("""^[a-zA-Z0-9_=.":/<>?_\-\s]*$""", xml_string.read()) else "1. Invalid!!! - special characters found!")
 
-    """ 
-    # Check and write adlnav namespace in manifest
-    def adlnavManifestCheck(rootnode):
-        try:
-            test = rootnode.getAttribute("xmlns:adlnav")
-            if test == "":
-                print("adlnav-namespace NOT found in manifest tag!")
-                rootnode.setAttribute("xmlns:adlnav", "http://www.adlnet.org/xsd/adlnav_v1p3")
-                print("Created namespace entry: " + rootnode.getAttribute("xmlns:adlnav"))
-            return rootnode
-        except:
-            rootnode.setAttribute("xmlns:adlnav", "http://www.adlnet.org/xsd/adlnav_v1p3")
-            print("Created namespace entry: " + rootnode.getAttribute("xmlns:adlnav"))
-            return rootnode"""
-
     # Check if only one Item present
     def checkOneItemOnly(rootnode):
         return True if len(rootnode.getElementsByTagName('item')) == 1 else False
@@ -40,6 +25,8 @@ class xmlHelper:
 
         report_data = []
         isValid = True
+
+        # check for special chars in file names
         for fs in file_strings:
             if fs.hasAttribute('href'):
                 if re.match("""^[a-zA-Z0-9_./\-]*$""", fs.getAttribute('href')):
@@ -49,6 +36,14 @@ class xmlHelper:
                     print("Invalid Special Character in " + str(fs.getAttribute('href')))
                     report_data.append('<file href="' + str(fs.getAttribute('href')) + '" />')
 
+        # check for .swf files
+        for swf in file_strings:
+            if swf.hasAttribute('href'):
+                if swf.getAttribute('href')[-3:] == 'swf':
+                    isValid = False
+                    print("Warning: Flash Content detected!" + str(swf.getAttribute('href')))
+                    report_data.append('Flash file: <file href="' + str(swf.getAttribute('href')) + '" />')
+
         for item_s in item_strings:
             if item_s.hasAttribute('identifier'):
                 if re.match("""^[a-zA-Z0-9_./\-]*$""", item_s.getAttribute('href')):
@@ -56,7 +51,7 @@ class xmlHelper:
                 else:
                     isValid = False
                     print("Invalid Special Character in item identifier: " + str(item_s.getAttribute('identifier')))
-                    report_data.append('<item identifier="' + str(item_s.getAttribute('identifier')) + '"...')
+                    report_data.append('<item identifier="' + str(item_s.getAttribute('identifier')))
 
         for ts in title_strings:
             try:
@@ -111,8 +106,12 @@ class xmlHelper:
 
         # Append to domtree
         title_element = domtree.getElementsByTagName('title')[1]
-        # title_element.parentNode.appendChild(adln_presentation)
-        title_element.parentNode.insertBefore(adln_presentation, title_element)
+        parent = title_element.parentNode
+        adlnav = parent.insertBefore(adln_presentation, title_element)
+        parent.removeChild(title_element)
+        parent.insertBefore(title_element, adlnav)
+
+        # title_element.parentNode.insertBefore(adln_presentation, title_element)
         return domtree
 
     # check scorm version
