@@ -36,6 +36,8 @@ class xmlHelper:
 
         file_strings = rootnode.getElementsByTagName('file')
         title_strings = rootnode.getElementsByTagName('title')
+        item_strings = rootnode.getElementsByTagName('item')
+
         report_data = []
         isValid = True
         for fs in file_strings:
@@ -46,6 +48,15 @@ class xmlHelper:
                     isValid = False
                     print("Invalid Special Character in " + str(fs.getAttribute('href')))
                     report_data.append('<file href="' + str(fs.getAttribute('href')) + '" />')
+
+        for item_s in item_strings:
+            if item_s.hasAttribute('identifier'):
+                if re.match("""^[a-zA-Z0-9_./\-]*$""", item_s.getAttribute('href')):
+                    pass
+                else:
+                    isValid = False
+                    print("Invalid Special Character in item identifier: " + str(item_s.getAttribute('identifier')))
+                    report_data.append('<item identifier="' + str(item_s.getAttribute('identifier')) + '"...')
 
         for ts in title_strings:
             try:
