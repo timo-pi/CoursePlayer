@@ -32,8 +32,10 @@ def retrieve_file_paths(dirName):
 def zipDir(dir_name, out_filename):
     print("def zipDir2: ")
     print(Path(dir_name).parent.parent)
+    current_cwd = os.getcwd()
     os.chdir(Path(dir_name).parent.parent)
     shutil.make_archive(out_filename, 'zip', dir_name)
+    os.chdir(current_cwd)
 
 def extractScorm(zip_file):
     # btn_select.config(state="disabled")

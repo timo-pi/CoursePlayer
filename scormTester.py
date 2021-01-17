@@ -6,6 +6,7 @@ from xmlHelper import xmlHelper as xhelp
 import scormZipper as sz
 import writeExcel as we
 from pathlib import Path
+import mediainfo
 
 #**************************************************+++
 # Command to build exe:
@@ -15,6 +16,7 @@ from pathlib import Path
 multi_files_select = False
 report_path = ""
 report_saved = False
+check_media_files = True
 
 def saveImsmanifest(rootnode, path):
     with open(path, 'w') as f:
@@ -24,7 +26,9 @@ def saveImsmanifest(rootnode, path):
     ##sz.zipScorm(path)
 
 def runChecks(path):
+    path = path.replace('\\', '/')
     report_data = [path]
+    print("PATH: " + str(path))
     SCORM_2004_4 = False
     # open xml document
     try:
@@ -172,6 +176,11 @@ def runChecks(path):
             print("Error saving report - file may be open")
             clearLabels()
             setLabelStatus('Report could not be saved (maybe open?)', '#fe5f55')
+    # check media files with exiftool
+    if check_media_files:
+        mediainfo.checkMediaFiles([path])
+    else:
+        print("Media files check disabled.")
 
 def selectFiles():
     root.filenames = filedialog.askopenfilenames(initialdir="/", title="Select file", filetypes=(("all files", "*.*"), ("all files", "*.*")))
@@ -192,6 +201,28 @@ def selectFiles():
             setLabelStatus('Multiple files selected - pls. check SCORM-Test-Report.xlsx', '#ffd275')
         else:
             setLabelStatus('Report could not be saved (maybe open?)', '#ffd275')"""
+
+def clearLabels():
+    label_scorm = tk.Label(root, textvariable="", anchor="w")
+    label_scorm.place(x=20, y=20, width=360, height=30)
+    label_namespace = tk.Label(root, textvariable="", anchor="w")
+    label_namespace.place(x=20, y=50, width=360, height=30)
+    label_item = tk.Label(root, textvariable="", anchor="w")
+    label_item.place(x=20, y=80, width=360, height=30)
+    label_characters = tk.Label(root, textvariable="", anchor="w")
+    label_characters.place(x=20, y=110, width=360, height=30)
+    label_status = tk.Label(root, textvariable="", borderwidth=2, relief="groove", anchor="w")
+    label_status.place(x=10, y=170, width=380, height=30)
+
+def setLabelStatus(text, color):
+    text_status.set(text)
+    label_status = tk.Label(root, textvariable=text_status, borderwidth=2, anchor="w", background=color)
+    label_status.place(x=20, y=175, width=360, height=20)
+
+def setNamespaceLabel(text, color):
+    text_namespace.set(text)
+    label_namespace = tk.Label(root, textvariable=text_namespace, anchor="w", background=color)
+    label_namespace.place(x=20, y=50, width=360, height=30)
 
 # GUI
 root = tk.Tk()
@@ -226,27 +257,5 @@ label_characters = tk.Label(root, textvariable=text_characters, anchor="w")
 label_characters.place(x=20, y=110, width=360, height=30)
 label_status = tk.Label(root, textvariable=text_status, borderwidth=2, relief="groove", anchor="w")
 label_status.place(x=10, y=170, width=380, height=30)
-
-def clearLabels():
-    label_scorm = tk.Label(root, textvariable="", anchor="w")
-    label_scorm.place(x=20, y=20, width=360, height=30)
-    label_namespace = tk.Label(root, textvariable="", anchor="w")
-    label_namespace.place(x=20, y=50, width=360, height=30)
-    label_item = tk.Label(root, textvariable="", anchor="w")
-    label_item.place(x=20, y=80, width=360, height=30)
-    label_characters = tk.Label(root, textvariable="", anchor="w")
-    label_characters.place(x=20, y=110, width=360, height=30)
-    label_status = tk.Label(root, textvariable="", borderwidth=2, relief="groove", anchor="w")
-    label_status.place(x=10, y=170, width=380, height=30)
-
-def setLabelStatus(text, color):
-    text_status.set(text)
-    label_status = tk.Label(root, textvariable=text_status, borderwidth=2, anchor="w", background=color)
-    label_status.place(x=20, y=175, width=360, height=20)
-
-def setNamespaceLabel(text, color):
-    text_namespace.set(text)
-    label_namespace = tk.Label(root, textvariable=text_namespace, anchor="w", background=color)
-    label_namespace.place(x=20, y=50, width=360, height=30)
 
 root.mainloop()
