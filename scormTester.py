@@ -1,7 +1,7 @@
 from xml.dom import minidom
 import re, os
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, IntVar, Checkbutton
 from xmlHelper import xmlHelper as xhelp
 import scormZipper as sz
 import writeExcel as we
@@ -11,6 +11,7 @@ import mediainfo
 #**************************************************+++
 # Command to build exe:
 # pyinstaller --add-data "writeExcel.py;." --add-data "xmlHelper.py;." --add-data "scormZipper.py;." --onefile --clean -y scormTester.py
+# pyinstaller --add-data "writeExcel.py;." --add-data "xmlHelper.py;." --add-data "scormZipper.py;." --add-data "mediainfo.py;." --add-data "exiftool.exe;." --clean -y scormTester.py
 #*****************************************************
 
 multi_files_select = False
@@ -132,7 +133,7 @@ def runChecks(path):
             parent_path = Path(path).parent
             zip_path = os.path.join(parent_path.parent, os.path.basename(os.path.dirname(path + "/imsmanifest.xml"))) + '_SF.zip'
             #new_zip_file_path = os.path.join(os.path.dirname(path), file_name)
-            setLabelStatus("imsmanifest.xml adjusted and new SCORM package created!", '#fe5f55')
+            setLabelStatus("imsmanifest.xml adjusted and new SCORM package created!", '#ffd275')
 
             # save manifest.xml
             saveImsmanifest(rootnode, path + "/imsmanifest.xml")
@@ -151,13 +152,13 @@ def runChecks(path):
 
     # check filenames for special characters
     if xhelp.checkSpecialCharsInFileNames(rootnode, (os.path.dirname(path + "/imsmanifest.xml") + '_SPECIAL_CHARACTERS.xlsx')):
-        label_characters = tk.Label(root, textvariable=text_characters, anchor="w", background='#c7d66d')
+        label_characters = tk.Label(root, textvariable=text_characters, anchor="w", background='#c7d66d') #green
         label_characters.place(x=20, y=110, width=360, height=30)
         text_characters.set("Passed: No special characters in file or title elements.")
         # write to excel if multiple files selected
         if multi_files_select: report_data.append("Passed: No special characters in file or title elements.")
     else:
-        label_characters = tk.Label(root, textvariable=text_characters, anchor="w", background='#fe5f55')
+        label_characters = tk.Label(root, textvariable=text_characters, anchor="w", background='#fe5f55') #red
         label_characters.place(x=20, y=110, width=360, height=30)
         text_characters.set("Failed: special characters or .swf files detected!")
         setLabelStatus("Pls. check report/ imsmanifest.xml for special characters!", '#fe5f55')
@@ -177,15 +178,15 @@ def runChecks(path):
             clearLabels()
             setLabelStatus('Report could not be saved (maybe open?)', '#fe5f55')
     # check media files with exiftool
-    if check_media_files:
+    if checkbox_media_test.get():
         mediainfo.checkMediaFiles([path])
     else:
         print("Media files check disabled.")
 
 def selectFiles():
     root.filenames = filedialog.askopenfilenames(initialdir="/", title="Select file", filetypes=(("all files", "*.*"), ("all files", "*.*")))
-    print(root.filenames)
     if len(root.filenames) == 1:
+        print("FILE: " + str(root.filenames))
         runChecks(sz.extractScorm(root.filenames[0]))
     # MULTIPLE FILES SELECTED
     elif len(root.filenames) > 1:
@@ -194,13 +195,9 @@ def selectFiles():
         report_path = os.path.dirname(root.filenames[0])
         report_saved = we.createReport(report_path)
         for i in root.filenames:
+            print("FILE: " + str(i))
             clearLabels()
             runChecks(sz.extractScorm(i))
-
-        """if report_saved:
-            setLabelStatus('Multiple files selected - pls. check SCORM-Test-Report.xlsx', '#ffd275')
-        else:
-            setLabelStatus('Report could not be saved (maybe open?)', '#ffd275')"""
 
 def clearLabels():
     label_scorm = tk.Label(root, textvariable="", anchor="w")
@@ -224,6 +221,13 @@ def setNamespaceLabel(text, color):
     label_namespace = tk.Label(root, textvariable=text_namespace, anchor="w", background=color)
     label_namespace.place(x=20, y=50, width=360, height=30)
 
+def toggleMediaCheck():
+    global check_media_files
+    if check_media_files:
+        check_media_files = False
+    else:
+        check_media_files = True
+
 # GUI
 root = tk.Tk()
 text_scorm, text_namespace, text_item, text_characters, text_status = tk.StringVar(), tk.StringVar(), tk.StringVar(), tk.StringVar(), tk.StringVar()
@@ -243,6 +247,11 @@ btn_select = tk.Button(root, text="Select File(s)", command=selectFiles)
 btn_quit = tk.Button(root, text="Quit", command=lambda: root.destroy())
 btn_select.place(x=130, y=270, width=140, height=30)
 btn_quit.place(x=130, y=310, width=140, height=30)
+
+# Checkboxes
+checkbox_media_test = IntVar()
+checkbox_media_test.set(True)
+Checkbutton(root, text="Create Media Files Report", command=toggleMediaCheck, variable=checkbox_media_test).place(x=130, y=235)
 
 # Labels
 label_group = tk.Label(root, borderwidth=2, relief="groove")

@@ -44,7 +44,7 @@ def extractScorm(zip_file):
         # create /temp folder
         filename = os.path.basename(zip_file)
         dirname = os.path.dirname(zip_file)
-        extract_path = os.path.join(dirname, 'temp', filename)
+        extract_path = os.path.join(dirname, 'temp', filename).replace('\\', '/')
         extracted_scorm_path = extract_path[:-4]
 
         zip_ref.extractall(extracted_scorm_path)

@@ -60,7 +60,7 @@ class xmlHelper:
                 else:
                     isValid = False
                     report_data.append('<title>' + ts.firstChild.nodeValue + '</title>')
-                    print("SPECIAL CHARS DETECTED: " + str(ts.firstChild.nodeValue))
+                    # print("SPECIAL CHARS DETECTED: " + str(ts.firstChild.nodeValue))
             except:
                 print("Exception during special characters Check.")
 

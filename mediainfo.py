@@ -9,22 +9,20 @@ path = 'c:\\temp\\scorm\\'
 unzip_path = 'c:\\temp\\scorm\\unzip\\'
 unzipped_directories = []
 #exif = 'c:\\temp\\exiftool.exe'
-exif = 'exiftool.exe'
+exif = './exiftool.exe'
 
 # Methods
 def check_file(file_input):
     print("Analyzing media file...")
+    print("FILE_INPUT: " + str(file_input))
     metadata = []
     process = subprocess.Popen([exif, file_input], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, encoding='utf8', errors='ignore')
     for output in process.stdout:
-        # print(output.strip())
         info = []
         line = output.strip().split(':')
         info.append(line[0].strip())
         info.append(line[1].strip())
-        # metadata[line[0].strip()] = line[1].strip()
         metadata.append(info)
-    #print(metadata)
     return metadata
 
 def changeExcelColumnWidth(ws):
@@ -40,6 +38,7 @@ def write_to_excel(media_data, unzip_dir):
     #report_path = os.path.join(parent_path.parent, os.path.basename(os.path.dirname(unzip_dir)))
     report_path = Path(parent_path).parent
     print("report_path: " + str(report_path))
+    restore_cwd = os.getcwd()
     os.chdir(report_path)
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -50,6 +49,7 @@ def write_to_excel(media_data, unzip_dir):
     report_filename = 'MEDIA-REPORT_' + os.path.basename(os.path.dirname(unzip_dir + "/imsmanifest.xml") + '.xlsx')
     print("REPORT-Filename: " + report_filename)
     wb.save(report_filename)
+    os.chdir(restore_cwd)
 
 def filter_report(report, file_paths):
     print("Filtering media data for report.")
@@ -58,12 +58,11 @@ def filter_report(report, file_paths):
     file_counter = 0
     for media_file in report:
         row = []
-        print('-------------------------------')
         data_dict = {}
         for data in media_file:
             data_dict[data[0]] = data[1]
             #data_dict = {data[0]: data[1]}
-            print(data[0], " *** ", data[1])
+            #print(data[0], " *** ", data[1])
             #row.append(data[0])
             #row.append(data[1])
         try:
@@ -92,7 +91,7 @@ def filter_report(report, file_paths):
         row.append(data_dict.get('Encoding Process')) if 'Encoding Process' in data_dict else row.append(" ")
 
         data_final.append(row)
-        print(row)
+        #print(row)
     return data_final
 
 # Unzip all zip-files in unzip directory
@@ -108,32 +107,32 @@ def unzipScormFiles(scorm_path):
 # find all images and videos of unzipped content
 def checkMediaFiles(directories):
     for unzip_dir in directories:
-        # print("Searching for all media files in " + unzip_dir)
-        # list of all media file infos
         report = []
         # list of all media file paths (to put into report)
         file_paths = []
         for folder, subfolders, filenames in os.walk(unzip_dir):
             for file in filenames:
-                # search for images, videos, audios
-                if file.endswith('.png') or file.endswith('.jpg') or file.endswith('.gif') or file.endswith('.jpeg') or file.endswith('.bmp') or file.endswith('.tiff') or file.endswith('.tif') or file.endswith('.avif') or file.endswith('.webp') or file.endswith('.svg') or file.endswith('pdf'):
-                    print(os.path.join(folder, file))
-                    report.append(check_file(os.path.join(folder, file)))
+                # search for images, videos, audios (no .svg check due to massive .svg files in ttkf projects!)
+                if file.endswith('.png') or file.endswith('.jpg') or file.endswith('.gif') or file.endswith('.jpeg') or file.endswith('.bmp') or file.endswith('.tiff') or file.endswith('.tif') or file.endswith('.avif') or file.endswith('.webp') or file.endswith('pdf'):
+                    print(os.path.join(folder, file).replace('\\', '/'))
+                    report.append(check_file(os.path.join(folder, file).replace('\\', '/')))
                     file_paths.append(os.path.join(folder, file))
                 elif file.endswith('.mpeg') or file.endswith('.mp4') or file.endswith('.mov') or file.endswith('.ogg') or file.endswith('.avi') or file.endswith('.wmv') or file.endswith('.mkv') or file.endswith('.flv'):
-                    print(os.path.join(folder, file))
-                    file_paths.append(os.path.join(folder, file))
+                    print(os.path.join(folder, file).replace('\\', '/'))
+                    file_paths.append(os.path.join(folder, file).replace('\\', '/'))
                     report.append(check_file(os.path.join(folder, file)))
                 elif file.endswith('.mp3') or file.endswith('.ogv') or file.endswith('.aac') or file.endswith('.wav') or file.endswith('.mpg') or file.endswith('.mpeg') or file.endswith('.m2v'):
-                    print(os.path.join(folder, file))
-                    file_paths.append(os.path.join(folder, file))
+                    print(os.path.join(folder, file).replace('\\', '/'))
+                    file_paths.append(os.path.join(folder, file).replace('\\', '/'))
                     report.append(check_file(os.path.join(folder, file)))
     # create report for each unzipped SCORM package
     report_filtered = filter_report(report, file_paths)
+    restore_cwd = os.getcwd()
     os.chdir(unzip_dir)
     write_to_excel(report_filtered, unzip_dir)
-    print(report)
+    os.chdir(restore_cwd)
+    #print(report)
 
-# Test
+# FOR TESTING PURPOSES ONLY:
 #unzipScormFiles(path)
 #checkMediaFiles(['C:\\Users\\timop\\Downloads\\ZIP-Tests\\temp\\course-scorm2004_4'])
