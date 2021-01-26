@@ -16,7 +16,7 @@ from xml.dom import minidom
 #*****************************************************
 
 # Variables
-
+version = 'v2.2'
 extracted_scorm_path = ''
 # httpd = http.server.HTTPServer
 startCwd = os.getcwd()
@@ -26,46 +26,46 @@ def startWebServer():
     #os.chdir(extracted_scorm_path)
     try:
         path = os.getcwd()
+        # Starting Webserver from root directory
         os.chdir(path[0:3])
-        print("starting server - path name: " + extracted_scorm_path)
-        print(os.chdir(path[0:3]))
+        print("starting server...")
+        # print(os.chdir(path[0:3]))
         httpd = http.server.HTTPServer(('localhost', 8000), http.server.SimpleHTTPRequestHandler)
+        print("Webserver is running!")
         httpd.serve_forever()
     except:
         path = os.getcwd()
         os.chdir(path[0:3])
         print("starting server - path name: " + extracted_scorm_path)
-        print(os.chdir(path[0:3]))
+        #print(os.chdir(path[0:3]))
         print("Webserver is running!")
 
 # Find start-html file
 def searchStartFile(path):
-
+    for file in os.listdir(path):
+        if file == 'story.html':
+            return 'story.html'
+        elif file == 'index.html':
+            return 'index.html'
+        elif file == 'start_am.html':
+            return 'start_am.html'
+        elif file == 'start_lm.html':
+            return 'start_lm.html'
+        elif file == 'start_lm_scorm.html':
+            return 'start_lm_scorm.html'
+        elif file == 'start_am_scorm.html':
+            return 'start_am_scorm.html'
+        elif file == 'index_scorm.html':
+            return 'index_scorm.html'
     try:
         domtree = minidom.parse(path + "/imsmanifest.xml")
         rootnode = domtree.documentElement
         resource = rootnode.getElementsByTagName('resource')
         for r in resource:
             if r.hasAttribute('href'):
-                #print("start-path in imsmanifest.xml found:")
+                print("start-path in imsmanifest.xml: ")
                 return r.getAttribute('href')
     except:
-        print("error parsing imsmanifest.xml")
-        for file in os.listdir(path):
-            if file == 'story.html':
-                return 'story.html'
-            elif file == 'start_lm.html':
-                return 'start_lm.html'
-            elif file == 'index.html':
-                return 'index.html'
-            elif file == 'index_scorm.html':
-                return 'index_scorm.html'
-            elif file == 'start_am.html':
-                return 'start_am.html'
-            elif file == 'start_am_scorm.html':
-                return 'start_am_scorm.html'
-            elif file == "scormcontent":
-                return "scormcontent/"
         return ''
 
 # Extract SCORM file
@@ -78,7 +78,7 @@ def extractScorm(filename):
 
     # Find Startfile
     start_file = searchStartFile(extracted_scorm_path)
-    print("start_file: " + start_file)
+    print(str(start_file))
     threading.Thread(target=startWebServer).start()
     openBrowser(start_file)
 
@@ -91,13 +91,13 @@ def close_window():
 def openBrowser(start_file):
     print("preparing environment")
     start_path = 'http://localhost:8000/' + extracted_scorm_path[3:] + '/' + start_file
+    start_path = start_path.replace(" ", "%20")
     print("Start Path: " + start_path)
     time.sleep(1)
     print("open browser...")
     time.sleep(1)
     subprocess.call(['start', start_path], shell=True)
     time.sleep(1)
-    #close_window()
 
 # GUI
 
@@ -112,20 +112,22 @@ def buttonPressed():
 def setLabelText(text):
     text_status.set(text)
     label_status = tk.Label(root, textvariable=text_status, borderwidth=2, relief="groove", anchor="c")
-    label_status.place(x=10, y=50, width=320, height=30)
+    label_status.place(x=10, y=70, width=420, height=30)
 
 root = tk.Tk()
-root.geometry('340x230')
-root.title('SIT | Course Player')
+root.geometry('440x300')
+title_version = 'SIT | Course Player ' + version
+root.title(title_version)
+print(version)
 #root.iconbitmap('./schwarz.ico')
-btn_select = tk.Button(root, text="Select SCORM zip file", command=buttonPressed)
+btn_select = tk.Button(root, text="Select SCORM zip-file", command=buttonPressed)
 btn_quit = tk.Button(root, text="Quit", command=lambda: close_window())
-btn_select.place(x=100, y=110, width=140, height=30)
-btn_quit.place(x=100, y=145, width=140, height=30)
+btn_select.place(x=150, y=140, width=140, height=30)
+btn_quit.place(x=150, y=180, width=140, height=30)
 
 text_status = tk.StringVar()
 text_status.set("Please select a SCORM-File")
 label_status = tk.Label(root, textvariable=text_status, borderwidth=2, relief="groove", anchor="c")
-label_status.place(x=10, y=50, width=320, height=30)
+label_status.place(x=10, y=70, width=420, height=30)
 
 root.mainloop()
